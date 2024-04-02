@@ -1,0 +1,44 @@
+version: '3.9'
+
+networks:
+  sso-network:
+    name: sso-network
+  go-apps-network:
+    name: go-apps-network
+
+volumes:
+  db:
+
+x-common: &common
+  restart: 'no'
+
+services:
+  app:
+    <<: *common
+    build:
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+    ports:
+      - '44044:44044'
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    networks:
+      go-apps-network:
+        aliases:
+          - sso.internal.com
+      sso-network:
+  db:
+    <<: *common
+    image: postgres
+    hostname: "db-host"
+    ports:
+      - "54322:5432"
+    volumes:
+      - db:/var/lib/postgresql/data
+    env_file:
+      - .env
+    networks:
+      - sso-network
